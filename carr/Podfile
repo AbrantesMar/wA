@@ -1,0 +1,42 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'carr' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for carr
+  pod 'RxSwift', '6.5.0'
+  pod 'RxCocoa', '6.5.0'
+
+  target 'carrTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+  target 'carrUITests' do
+    # Pods for testing
+  end
+
+end
+
+target 'Domain' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for Domain
+
+end
+
+target 'Infra' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for Infra
+  pod 'Alamofire', '5.7.1'
+
+  target 'InfraTests' do
+    # Pods for testing
+  end
+
+end

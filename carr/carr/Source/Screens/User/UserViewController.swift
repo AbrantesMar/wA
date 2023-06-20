@@ -50,6 +50,12 @@ public class UserViewController: UIViewController {
         return button
     }()
     
+    private lazy var loaging: UIActivityIndicatorView = {
+        let view = UIActivityIndicatorView(frame: .zero)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     public init(viewModel: UserViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -63,12 +69,23 @@ public class UserViewController: UIViewController {
         super.viewDidLoad()
         title = "Usuário"
         view.backgroundColor = .white
+        self.showSpinner()
         setup()
         
     }
     
     @objc private func viewProfileButtonTapped() {
         delegate?.goRepositories(userName: loginLabel.text ?? "")
+    }
+
+    private func showSpinner() {
+        self.loaging.startAnimating()
+        self.loaging.isHidden = false
+    }
+
+    private func hideSpinner() {
+        self.loaging.stopAnimating()
+        self.loaging.isHidden = true
     }
 }
 
@@ -89,6 +106,7 @@ extension UserViewController: ViewManager {
                 if let imageData = try? Data(contentsOf: url) {
                     DispatchQueue.main.async {
                         self?.avatarImageView.image = UIImage(data: imageData)
+                        self?.hideSpinner()
                     }
                 }
             }
@@ -100,6 +118,7 @@ extension UserViewController: ViewManager {
         view.addSubview(nameLabel)
         view.addSubview(loginLabel)
         view.addSubview(avatarImageView)
+        view.addSubview(loaging)
         view.addSubview(profileButton)
     }
     
@@ -112,6 +131,11 @@ extension UserViewController: ViewManager {
             loginLabel.topAnchor.constraint(equalTo: nameLabel.topAnchor, constant: 16),
             loginLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             loginLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            
+            loaging.topAnchor.constraint(equalTo: loginLabel.bottomAnchor, constant: 16),
+            loaging.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            loaging.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            loaging.heightAnchor.constraint(equalToConstant: 200),
             
             avatarImageView.topAnchor.constraint(equalTo: loginLabel.bottomAnchor, constant: 16),
             avatarImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),

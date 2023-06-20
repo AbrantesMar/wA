@@ -13,6 +13,7 @@ import RxCocoa
 
 public class HomeViewModel {
     private let usersList: UsersListProtocol
+    public var usersToFilter: [User] = []
     public var users: [User] = []
     public var login: PublishSubject<String> = PublishSubject()
     public var loginSelected: String
@@ -36,6 +37,7 @@ public class HomeViewModel {
         switch result {
         case .success(let users):
             self.users = users ?? []
+            self.usersToFilter = users ?? []
             self.reloadData?()
         case .failure(let error):
             self.showError?(error.localizedDescription)
@@ -48,5 +50,13 @@ public class HomeViewModel {
     
     func userAtIndex(_ index: Int) -> User {
         return users[index]
+    }
+    
+    func filterUsers(userName: String) {
+        users = usersToFilter
+            .filter{
+                $0.login.uppercased().contains(userName.uppercased())
+            }
+        self.reloadData?()
     }
 }

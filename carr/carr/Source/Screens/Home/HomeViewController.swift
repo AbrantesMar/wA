@@ -42,9 +42,16 @@ public class HomeViewController: UIViewController {
         return tableView
     }()
     
+    private lazy var loaging: UIActivityIndicatorView = {
+        let view = UIActivityIndicatorView(frame: .zero)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     public init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
+        
         self.viewModel.reloadData = { [weak self] in
             self?.tableView.reloadData()
         }
@@ -55,9 +62,13 @@ public class HomeViewController: UIViewController {
                 alert.dismiss(animated: true)
             }))
             alert.addAction(UIAlertAction(title: "Tente novamente", style: .default, handler: { action in
-                self?.viewModel.fetchUsers()
-                self?.tableView.reloadData()
-                alert.dismiss(animated: true)
+                DispatchQueue.main.async {
+                    self?.showSpinner()
+                    self?.viewModel.fetchUsers()
+                    self?.tableView.reloadData()
+                    alert.dismiss(animated: true)
+                    self?.hideSpinner()
+                }
             }))
             self?.present(alert, animated: true)
         }
@@ -69,9 +80,23 @@ public class HomeViewController: UIViewController {
     }
     
     public override func viewDidLoad() {
+        self.showSpinner()
         super.viewDidLoad()
         setup()
-        self.viewModel.fetchUsers()
+        DispatchQueue.main.async {
+            self.viewModel.fetchUsers()
+            self.hideSpinner()
+        }
+    }
+    
+    private func showSpinner() {
+        self.loaging.startAnimating()
+        self.loaging.isHidden = false
+    }
+
+    private func hideSpinner() {
+        self.loaging.stopAnimating()
+        self.loaging.isHidden = true
     }
 }
 
@@ -80,11 +105,29 @@ extension HomeViewController: ViewManager {
         viewModel
             .login
             .bind(to: textFilterTextField.rx.text).disposed(by: disposeBag)
+        
+        textFilterTextField.rx.controlEvent([.editingChanged])
+            .withLatestFrom(textFilterTextField.rx.text.orEmpty)
+            .subscribe(onNext: { [weak self] result in
+                guard !result.isEmpty else {
+                    DispatchQueue.main.async {
+                        self?.showSpinner()
+                        self?.viewModel.users = self?.viewModel.usersToFilter ?? []
+                        self?.tableView.reloadData()
+                        self?.hideSpinner()
+                    }
+                    return
+                }
+                self?.viewModel.filterUsers(userName: result)
+                
+        }).disposed(by: disposeBag)
+        
     }
     public func viewHierarchy() {
         title = "Users"
         view.addSubview(content)
         content.addSubview(textFilterTextField)
+        content.addSubview(loaging)
         content.addSubview(tableView)
         tableView.dataSource = self
         tableView.delegate = self
@@ -101,7 +144,12 @@ extension HomeViewController: ViewManager {
             textFilterTextField.heightAnchor.constraint(equalToConstant: 50),
             textFilterTextField.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             textFilterTextField.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            textFilterTextField.bottomAnchor.constraint(equalTo: tableView.topAnchor),
+            textFilterTextField.bottomAnchor.constraint(equalTo: loaging.topAnchor),
+            
+            loaging.topAnchor.constraint(equalTo: textFilterTextField.bottomAnchor),
+            loaging.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            loaging.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            loaging.bottomAnchor.constraint(equalTo: content.bottomAnchor),
             
             tableView.topAnchor.constraint(equalTo: textFilterTextField.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
